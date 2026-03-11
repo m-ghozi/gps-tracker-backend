@@ -1,6 +1,6 @@
 import net from 'net';
-import db from './models/index.js';
-import { parse } from './utils/gpsParser.js';
+import db from '../models/index.js';
+import { parse } from '../utils/gpsParser.js';
 
 const startTcpServer = () => {
     const TCP_PORT = process.env.TCP_PORT || 5023;
@@ -16,13 +16,13 @@ const startTcpServer = () => {
                 if (!payload) return;
 
                 const parsedData = parse(payload);
-                
+
                 if (parsedData) {
-                    const { imei, latitude, longitude, speed, course } = parsedData;
+                    const { imei, latitude, longitude, speed, course, deviceTime } = parsedData;
 
                     // Find device
                     const device = await db.Device.findOne({ where: { imei } });
-                    
+
                     if (device) {
                         await db.Position.create({
                             device_id: device.id,
@@ -30,17 +30,17 @@ const startTcpServer = () => {
                             longitude,
                             speed,
                             course,
-                            device_time: new Date() // Fallback time since not in parser
+                            device_time: deviceTime || new Date()
                         });
                         console.log(`[TCP] Position inserted for IMEI ${imei}`);
-                        socket.write('OK\\n');
+                        socket.write('OK\n');
                     } else {
                         console.log(`[TCP] Unknown device IMEI: ${imei}`);
-                        socket.write('UNKNOWN_DEVICE\\n');
+                        socket.write('UNKNOWN_DEVICE\n');
                     }
                 } else {
-                     console.log(`[TCP] Invalid payload format or unparseable: ${payload}`);
-                     socket.write('INVALID_FORMAT\\n');
+                    console.log(`[TCP] Invalid payload format or unparseable: ${payload}`);
+                    socket.write('INVALID_FORMAT\n');
                 }
             } catch (err) {
                 console.error(`[TCP] Error processing data:`, err.message);

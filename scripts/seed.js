@@ -1,5 +1,5 @@
-import db from './models/index.js';
-import { User, Vehicle } from './models/index.js';
+import db from '../models/index.js';
+import { User, Vehicle } from '../models/index.js';
 
 const seed = async () => {
   try {
@@ -11,7 +11,7 @@ const seed = async () => {
     const admin = await User.create({
       name: 'Admin System',
       nip: '45678',
-      password: 'admin123', // In real app, hash this!
+      password: 'admin123',
       role: 'ADMIN',
       avatar: 'https://ui-avatars.com/api/?name=Admin+System&background=ef4444&color=fff'
     });
@@ -31,7 +31,7 @@ const seed = async () => {
       role: 'DRIVER',
       avatar: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=10b981&color=fff'
     });
-    
+
     const finance = await User.create({
       name: 'Siti Aminah',
       nip: '34567',
@@ -47,7 +47,7 @@ const seed = async () => {
       type: 'AMBULANCE',
       status: 'STANDBY',
       lastServiceDate: '2023-10-01',
-      taxDueDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0], // 1 year from now
+      taxDueDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
       fuelLevel: 85,
       driverId: driver.id
     });
@@ -58,7 +58,7 @@ const seed = async () => {
       type: 'OPERATIONAL',
       status: 'ACTIVE',
       lastServiceDate: '2023-09-15',
-      taxDueDate: new Date(new Date().setDate(new Date().getDate() + 15)).toISOString().split('T')[0], // 15 days from now (warning)
+      taxDueDate: new Date(new Date().setDate(new Date().getDate() + 15)).toISOString().split('T')[0],
       fuelLevel: 60
     });
 

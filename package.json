@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "seed": "node scripts/seed.js",
+    "test:gps": "node scripts/test_gps.js"
   },
   "keywords": [],
   "author": "",

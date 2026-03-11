@@ -3,83 +3,52 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import db from './models/index.js';
-import * as authController from './controllers/authController.js';
-import * as vehicleController from './controllers/vehicleController.js';
-import * as taskController from './controllers/taskController.js';
-import * as logController from './controllers/logController.js';
-import * as userController from './controllers/userController.js';
-import * as systemLogController from './controllers/systemLogController.js';
 import { verifyToken } from './middleware/authMiddleware.js';
 
-// GPS Tracker Imports
-import * as gpsDeviceController from './controllers/gpsDeviceController.js';
-import * as gpsPositionController from './controllers/gpsPositionController.js';
-import startTcpServer from './tcpServer.js';
+// Routes
+import authRoutes from './routes/auth.routes.js';
+import gpsRoutes from './routes/gps.routes.js';
+import userRoutes from './routes/user.routes.js';
+import vehicleRoutes from './routes/vehicle.routes.js';
+import taskRoutes from './routes/task.routes.js';
+import logRoutes from './routes/log.routes.js';
+import systemLogRoutes from './routes/systemLog.routes.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-
+// TCP Server
+import startTcpServer from './tcp/tcpServer.js';
 
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"]
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE']
   }
 });
 
 app.use(cors());
 app.use(express.json());
 
-// Middleware to pass io to controllers
+// Pass socket.io instance to all controllers via request
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
 
-// Auth Routes (Unprotected)
-app.post('/api/auth/login', authController.login);
+// ─── Public Routes ────────────────────────────────────────────────────────────
+app.use('/api/auth', authRoutes);
+app.use('/api', gpsRoutes);
 
-// GPS Tracker API Routes (Unprotected)
-app.get('/api/devices', gpsDeviceController.getDevices);
-app.post('/api/devices', gpsDeviceController.registerDevice);
-app.get('/api/positions/latest', gpsPositionController.getLatestPositions);
-app.get('/api/positions/:imei/history', gpsPositionController.getPositionHistory);
-
-// Apply auth middleware to all routes below this line
+// ─── Protected Routes (JWT required) ─────────────────────────────────────────
 app.use('/api', verifyToken);
+app.use('/api/users', userRoutes);
+app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/logs', logRoutes);
+app.use('/api/system-logs', systemLogRoutes);
 
-// User Routes
-app.get('/api/users', userController.getUsers);
-app.post('/api/users', userController.createUser);
-app.put('/api/users/:id', userController.updateUser);
-app.delete('/api/users/:id', userController.deleteUser);
-
-// Vehicle Routes
-app.get('/api/vehicles', vehicleController.getAllVehicles);
-app.post('/api/vehicles', vehicleController.createVehicle);
-app.put('/api/vehicles/:id', vehicleController.updateVehicle);
-app.delete('/api/vehicles/:id', vehicleController.deleteVehicle);
-
-// Task Routes
-app.get('/api/tasks', taskController.getAllTasks);
-app.post('/api/tasks', taskController.createTask);
-app.put('/api/tasks/:id', taskController.updateTaskStatus);
-
-// Log Routes
-app.get('/api/logs', logController.getAllLogs);
-app.post('/api/logs', logController.createLog);
-app.put('/api/logs/:id', logController.updateLogStatus);
-
-// System Log Routes
-app.get('/api/system-logs', systemLogController.getSystemLogs);
-
-// Socket.IO Logic
+// ─── Socket.IO ────────────────────────────────────────────────────────────────
 const connectedClients = new Map();
 
 io.on('connection', (socket) => {
@@ -123,6 +92,7 @@ io.on('connection', (socket) => {
   });
 });
 
+// ─── Start Server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 4444;
 
 db.sequelize.sync({ alter: true }).then(() => {
