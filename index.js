@@ -101,8 +101,8 @@ db.sequelize.sync({ alter: true }).then(() => {
     console.log(`Server running on port ${PORT}`);
   });
 
-  // Start TCP Server for GPS Tracker
-  startTcpServer();
+  // Start TCP Server for GPS Tracker (pass io for real-time broadcast)
+  startTcpServer(io);
 }).catch(err => {
   console.error('Failed to sync database:', err);
 });

@@ -2,7 +2,7 @@ import net from 'net';
 import db from '../models/index.js';
 import { parse } from '../utils/gpsParser.js';
 
-const startTcpServer = () => {
+const startTcpServer = (io) => {
     const TCP_PORT = process.env.TCP_PORT || 5023;
 
     const server = net.createServer((socket) => {
@@ -18,13 +18,13 @@ const startTcpServer = () => {
                 const parsedData = parse(payload);
 
                 if (parsedData) {
-                    const { imei, latitude, longitude, speed, course, deviceTime } = parsedData;
+                    const { imei, valid, latitude, longitude, speed, course, deviceTime } = parsedData;
 
                     // Find device
                     const device = await db.Device.findOne({ where: { imei } });
 
                     if (device) {
-                        await db.Position.create({
+                        const position = await db.Position.create({
                             device_id: device.id,
                             latitude,
                             longitude,
@@ -32,7 +32,23 @@ const startTcpServer = () => {
                             course,
                             device_time: deviceTime || new Date()
                         });
+
                         console.log(`[TCP] Position inserted for IMEI ${imei}`);
+
+                        // Broadcast real-time update to all connected Socket.IO clients
+                        if (io) {
+                            io.emit('gps_position', {
+                                imei,
+                                name: device.name,
+                                latitude,
+                                longitude,
+                                speed,
+                                course,
+                                valid,
+                                device_time: position.device_time
+                            });
+                        }
+
                         socket.write('OK\n');
                     } else {
                         console.log(`[TCP] Unknown device IMEI: ${imei}`);
