@@ -14,7 +14,7 @@ export function parse(packet) {
   try {
     // 1. Extract IMEI by splitting at 'BR'
     const parts = packet.split('BR');
-    const imei = parts[0]; 
+    const imei = parts[0];
     const afterBR = parts[1]; // e.g. "00260311A0026..."
 
     // 2. Extract Date from the first 8 characters after 'BR'
@@ -31,15 +31,15 @@ export function parse(packet) {
     );
     if (!m) return null;
 
-    const validity   = m[1];
-    const latRaw     = m[2];   
-    const lonRaw     = m[3];   
-    const speedKnots = parseFloat(m[4]);  
-    const timeRaw    = m[5].padStart(6, '0');  // "55843" -> "055843"
-    const course     = parseFloat(m[6]);  
+    const validity = m[1];
+    const latRaw = m[2];
+    const lonRaw = m[3];
+    const speedKnots = parseFloat(m[4]);
+    const timeRaw = m[5].padStart(6, '0');  // "55843" -> "055843"
+    const course = parseFloat(m[6]);
 
-    const latitude   = convertCoordinate(latRaw);
-    const longitude  = convertCoordinate(lonRaw);
+    const latitude = convertCoordinate(latRaw);
+    const longitude = convertCoordinate(lonRaw);
 
     // Convert speed from knots to km/h
     const speed = parseFloat((speedKnots * 1.852).toFixed(2));
@@ -48,12 +48,12 @@ export function parse(packet) {
     const hh = parseInt(timeRaw.substring(0, 2));
     const mm = parseInt(timeRaw.substring(2, 4));
     const ss = parseInt(timeRaw.substring(4, 6));
-    
+
     // Create Date object in UTC
     const deviceTime = new Date(Date.UTC(year, month, day, hh, mm, ss));
-    
+
     // Add +7 hours 50 minutes offset as requested
-    const offsetMs = (7 * 60 + 50) * 60 * 1000;
+    const offsetMs = 7 * 60 * 60 * 1000;
     deviceTime.setTime(deviceTime.getTime() + offsetMs);
 
     return {
@@ -72,8 +72,8 @@ export function parse(packet) {
 }
 
 function convertCoordinate(coord) {
-  const direction = coord.slice(-1);          
-  const value     = parseFloat(coord.slice(0, -1));
+  const direction = coord.slice(-1);
+  const value = parseFloat(coord.slice(0, -1));
 
   const degrees = Math.floor(value / 100);
   const minutes = value - degrees * 100;
