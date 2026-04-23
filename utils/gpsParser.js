@@ -51,6 +51,10 @@ export function parse(packet) {
     
     // Create Date object in UTC
     const deviceTime = new Date(Date.UTC(year, month, day, hh, mm, ss));
+    
+    // Add +7 hours 50 minutes offset as requested
+    const offsetMs = (7 * 60 + 50) * 60 * 1000;
+    deviceTime.setTime(deviceTime.getTime() + offsetMs);
 
     return {
       imei,
